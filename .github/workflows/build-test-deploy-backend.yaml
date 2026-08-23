@@ -13,7 +13,7 @@ on:
         default: false
         type: boolean
   schedule:
-    - cron: '0 5 * * *'
+    - cron: '0 11 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -107,7 +107,7 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-publish
       cancel-in-progress: false
 
     permissions:
