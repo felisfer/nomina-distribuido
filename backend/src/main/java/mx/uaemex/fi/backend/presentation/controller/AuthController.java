@@ -9,7 +9,6 @@ import mx.uaemex.fi.backend.presentation.dto.EmpleadoResponse;
 import mx.uaemex.fi.backend.presentation.dto.JwtResponse;
 import mx.uaemex.fi.backend.presentation.dto.LoginRequest;
 import mx.uaemex.fi.backend.presentation.dto.RegisterRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    @Value( "${app.secure-cookie}")
-    private Boolean secureCookie;
-
     private final AuthService authService;
 
     @PostMapping("/register")
@@ -30,15 +26,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<@NonNull JwtResponse> login(@Valid @RequestBody LoginRequest request) {
         var res = authService.login(request);
-        var cookie = ResponseCookie.from("access_token", res.token())
-                .httpOnly(true)
-                .secure(secureCookie)
-                .sameSite("lax")
-                .path("/")
-                .maxAge(res.expiresInMs() / 1000)
-                .build();
-
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(res);
+        return ResponseEntity.ok().body(res);
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
