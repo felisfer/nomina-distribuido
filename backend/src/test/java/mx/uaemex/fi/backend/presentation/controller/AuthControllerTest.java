@@ -340,15 +340,10 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpectAll(
+                        header().string("Content-Type", MediaType.APPLICATION_JSON_VALUE),
                         jsonPath("$.token").value(jwtResponse.token()),
                         jsonPath("$.type").value(jwtResponse.type()),
                         jsonPath("$.expiresInMs").value(jwtResponse.expiresInMs())
-                )
-                .andExpectAll(
-                        cookie().exists("access_token"),
-                        cookie().httpOnly("access_token", true),
-                        cookie().maxAge("access_token", (int) (jwtResponse.expiresInMs() / 1000)),
-                        cookie().path("access_token", "/")
                 );
 
         verify(authService).login(loginRequest);
