@@ -9,6 +9,8 @@ ARG NODE_VERSION=24.19.0-alpine
 
 FROM node:${NODE_VERSION} AS base
 
+RUN apk update && apk upgrade --no-cache
+
 FROM base AS dependencies
 
 # Set working directory
