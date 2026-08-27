@@ -7,6 +7,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 class BackendApplicationTest {
     @Test
     void contextLoads() {
-
+        BackendApplication.main(new String[] {});
     }
 }

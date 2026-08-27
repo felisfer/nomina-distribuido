@@ -3,7 +3,6 @@ app:
     secret: p4zDJcrnZxKJ5iHpsIa3r4AE0P2GAtv0bhfbyrP8vv7UtH223l
     expiration: 3600000
   frontend-url: http://localhost:3000
-  secure-cookie: true
 spring:
   application:
     name: backend

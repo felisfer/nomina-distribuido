@@ -2,7 +2,6 @@ package mx.uaemex.fi.backend.presentation.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mx.uaemex.fi.backend.logic.service.CustomUserDetailsService;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -99,8 +99,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("doFilterInternal - Token válido autentica usuario")
     void doFilterInternal_tokenValido_autenticaUsuario() throws ServletException, IOException {
         // Arrange
-        Cookie cookie = new Cookie("access_token", TEST_TOKEN);
-        when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(jwtService.validateToken(TEST_TOKEN)).thenReturn(true);
         when(jwtService.getRfcFromToken(TEST_TOKEN)).thenReturn(TEST_RFC);
         when(userDetailsService.loadUserByUsername(TEST_RFC)).thenReturn(userDetails);
@@ -124,8 +123,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("doFilterInternal - Token válido usuario inexistente detiene filtros")
     void doFilterInternal_tokenValidoUsuarioInexistente_autenticaUsuario() throws ServletException, IOException {
         // Arrange
-        Cookie cookie = new Cookie("access_token", TEST_TOKEN);
-        when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(jwtService.validateToken(TEST_TOKEN)).thenReturn(true);
         when(jwtService.getRfcFromToken(TEST_TOKEN)).thenReturn(TEST_RFC);
         when(userDetailsService.loadUserByUsername(TEST_RFC)).thenThrow(new UsernameNotFoundException("Empleado no encontrado"));
@@ -144,7 +142,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("doFilterInternal - Sin token continúa sin autenticar")
     void doFilterInternal_sinToken_continuaSinAutenticar() throws ServletException, IOException {
         // Arrange
-        when(request.getCookies()).thenReturn(null);
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(null);
 
         // Act
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -160,8 +158,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("doFilterInternal - Token inválido detiene filtros")
     void doFilterInternal_tokenInvalido_redireccionaLogin() throws ServletException, IOException {
         // Arrange
-        Cookie cookie = new Cookie("access_token", TEST_TOKEN);
-        when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(jwtService.validateToken(TEST_TOKEN)).thenReturn(false);
 
         // Act
@@ -176,8 +173,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("doFilterInternal - Token expirado detiene filtros")
     void doFilterInternal_tokenExpirado_redireccionaLogin() throws ServletException, IOException {
         // Arrange
-        Cookie cookie = new Cookie("access_token", TEST_TOKEN);
-        when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(jwtService.validateToken(TEST_TOKEN)).thenReturn(false); // Token expirado es inválido
 
         // Act
@@ -192,8 +188,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("doFilterInternal - Token válido establece SecurityContext")
     void doFilterInternal_tokenValido_estableceSecurityContext() throws ServletException, IOException {
         // Arrange
-        Cookie cookie = new Cookie("access_token", TEST_TOKEN);
-        when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(jwtService.validateToken(TEST_TOKEN)).thenReturn(true);
         when(jwtService.getRfcFromToken(TEST_TOKEN)).thenReturn(TEST_RFC);
         when(userDetailsService.loadUserByUsername(TEST_RFC)).thenReturn(userDetails);
@@ -207,15 +202,11 @@ class JwtAuthenticationFilterTest {
         assertTrue(SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
     }
 
-    // ==================== PRUEBAS DE getJwtFromCookies ====================
-
     @Test
-    @DisplayName("getJwtFromCookies - Cookie access_token extrae token")
-    void getJwtFromCookies_cookieAccessToken_extraeToken() throws ServletException, IOException {
+    @DisplayName("doFilterInternal - Authorization header extrae token")
+    void doFilterInternal_authorizationHeader_extraeToken() throws ServletException, IOException {
         // Arrange
-        Cookie accessTokenCookie = new Cookie("access_token", TEST_TOKEN);
-        Cookie otraCookie = new Cookie("otra_cookie", "valor");
-        when(request.getCookies()).thenReturn(new Cookie[]{otraCookie, accessTokenCookie});
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(jwtService.validateToken(TEST_TOKEN)).thenReturn(true);
         when(jwtService.getRfcFromToken(TEST_TOKEN)).thenReturn(TEST_RFC);
         when(userDetailsService.loadUserByUsername(TEST_RFC)).thenReturn(userDetails);
@@ -228,10 +219,10 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("getJwtFromCookies - Sin cookies retorna null")
-    void getJwtFromCookies_sinCookies_retornaNull() throws ServletException, IOException {
+    @DisplayName("doFilterInternal - Sin header de autorización retorna")
+    void doFilterInternal_sinHeaderAutorizacion_retorna() throws ServletException, IOException {
         // Arrange
-        when(request.getCookies()).thenReturn(null);
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(null);
 
         // Act
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -242,17 +233,45 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("getJwtFromCookies - Cookie diferente retorna null")
-    void getJwtFromCookies_cookieDiferente_retornaNull() throws ServletException, IOException {
+    @DisplayName("doFilterInternal - Token inválido retorna")
+    void doFilterInternal_tokenInvalido_retorna() throws ServletException, IOException {
         // Arrange
-        Cookie otraCookie = new Cookie("otra_cookie", "valor");
-        when(request.getCookies()).thenReturn(new Cookie[]{otraCookie});
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
+        when(jwtService.validateToken(TEST_TOKEN)).thenReturn(false);
 
         // Act
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
         // Assert
-        verify(jwtService, never()).validateToken(anyString());
+        verify(jwtService).validateToken(TEST_TOKEN);
+        verify(filterChain, never()).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("doFilterInternal - Tipo de autorización inválido retorna")
+    void doFilterInternal_authorizationTokenTypeInvalido_retorna() throws ServletException, IOException {
+        // Arrange
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Something " + TEST_TOKEN);
+
+        // Act
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Assert
+        verify(jwtService, never()).validateToken(TEST_TOKEN);
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("doFilterInternal - Token vacío retorna")
+    void doFilterInternal_authorizationTokenVacio_retorna() throws ServletException, IOException {
+        // Arrange
+        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("");
+
+        // Act
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Assert
+        verify(jwtService, never()).validateToken(TEST_TOKEN);
         verify(filterChain).doFilter(request, response);
     }
 }

@@ -3,7 +3,6 @@ app:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION_MS}
   frontend-url: ${FRONTEND_URL:http://localhost}
-  secure-cookie: false
 spring:
   application:
     name: backend

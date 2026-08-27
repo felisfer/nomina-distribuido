@@ -16,7 +16,7 @@ export async function backendFetch(
   if (includeAuth) {
     const token = (await cookies()).get("access_token")?.value;
     if (token) {
-      headers.set("Cookie", `access_token=${token}`);
+      headers.set("Authorization", `Bearer ${token}`);
     }
   }
 
