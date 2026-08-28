@@ -118,7 +118,7 @@ jobs:
           scan-type: fs
           scan-ref: ./frontend
           format: sarif
-          output: trivy-fs-results.sarif
+          output: frontend/trivy-fs-results.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 1
@@ -174,7 +174,7 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           format: sarif
-          output: trivy-image-results.sarif
+          output: frontend/trivy-image-results.sarif
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: 1

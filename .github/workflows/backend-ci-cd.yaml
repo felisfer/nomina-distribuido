@@ -67,15 +67,15 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Verify and build with Maven
-        run: mvn -B verify
-
       # CodeQL initialization
       # https://github.com/github/codeql-action
       - name: CodeQL init
         uses: github/codeql-action/init@v4
         with:
           languages: java
+
+      - name: Verify and build with Maven
+        run: mvn -B verify
 
       # CodeQL analyze
       # https://github.com/github/codeql-action
@@ -101,7 +101,7 @@ jobs:
           scan-type: fs
           scan-ref: ./backend
           format: sarif
-          output: trivy-fs-results.sarif
+          output: backend/trivy-fs-results.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 1
@@ -157,7 +157,7 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           format: sarif
-          output: trivy-image-results.sarif
+          output: backend/trivy-image-results.sarif
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: 1
