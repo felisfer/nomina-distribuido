@@ -9,14 +9,14 @@ Sistema de gestión de nómina, con **backend API REST** (Spring Boot) y **front
 - Gestión de empleados y cálculo automático de nóminas (ISR, salario neto)
 - PostgreSQL (contenedor propio, con script de inicialización `database/init.sql`)
 - 226 pruebas unitarias en backend, 99% de cobertura
-- CI con GitHub Actions (`build-test-deploy-frontend.yaml` para frontend, `build-test-deploy-backend.yaml` para backend)
+- CI con GitHub Actions (`frontend-ci-cd.yaml` para frontend, `backend-ci-cd.yaml` para backend)
 - Dockerizado por completo (docker-compose con 3 servicios)
 
 ## Estructura
 
 ```
 mx-uaemex-isii-distributed/
-├── .github/workflows/   # CI: build-test-deploy-frontend.yaml, build-test-deploy-backend.yaml
+├── .github/workflows/   # CI: build. test y deploy en GHCR
 ├── backend/             # API REST en Java + Spring Boot
 │   ├── src/              # capas: config, logic, persistence, presentation
 │   └── docs/              # manual de usuario, diagramas UML, imágenes
