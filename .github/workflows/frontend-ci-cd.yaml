@@ -161,6 +161,7 @@ jobs:
           context: ./frontend
           load: true
           push: false
+          target: prod
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
