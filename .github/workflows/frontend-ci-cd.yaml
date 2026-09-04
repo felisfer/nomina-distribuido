@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
   schedule:
-    - cron: '0 11 * * *'
+    - cron: '25 11 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -42,6 +42,8 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     if: needs.changes.outputs.frontend_changed == 'true'
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
 
     permissions:
       contents: read
@@ -156,15 +158,35 @@ jobs:
       # Build once, load locally only; nothing reaches the registry yet
       # https://github.com/docker/build-push-action
       - name: Build image (local only)
+        id: build
         uses: docker/build-push-action@v7.3.0
         with:
           context: ./frontend
           load: true
           push: false
+          pull: true
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           target: prod
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Compare against published digest
+        id: compare
+        run: |
+          NEW_DIGEST="${{ steps.build.outputs.digest }}"
+          CURRENT_DIGEST=$(docker buildx imagetools inspect \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            --format '{{json .Manifest}}' 2>/dev/null | jq -r '.digest' || echo "none")
+
+          echo "Nuevo: $NEW_DIGEST"
+          echo "Actual: $CURRENT_DIGEST"
+
+          if [ "$NEW_DIGEST" = "$CURRENT_DIGEST" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       # Scan image for vulnerabilities
       # https://github.com/aquasecurity/trivy-action
@@ -199,7 +221,9 @@ jobs:
   publish-docker-image:
     name: Publish Docker image into GHCR (frontend)
     needs: lint-build-and-scan
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.test-build-and-scan.outputs.changed == 'true')
     runs-on: ubuntu-latest
 
     permissions:
