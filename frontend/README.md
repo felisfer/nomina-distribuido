@@ -16,6 +16,7 @@ Variables de entorno:
 ```env
 BACKEND_API_URL=http://localhost:8080
 PORT=3000
+ALLOWED_HOSTNAMES=localhost
 ```
 
 ## Ejecutar
