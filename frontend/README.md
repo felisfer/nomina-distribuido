@@ -32,7 +32,7 @@ Abrir: `http://localhost:3000` (o el puerto que asigne Next.js).
 ### Con Docker
 
 ```bash
-docker build -t frontend-nomina:latest .
+docker build -t frontend-nomina:latest --target dev .
 docker run -d -p 3000:3000 --name frontend-nomina frontend-nomina:latest
 ```
 
