@@ -4,6 +4,7 @@ import mx.uaemex.fi.backend.persistence.model.Acceso;
 import mx.uaemex.fi.backend.persistence.model.Empleado;
 import mx.uaemex.fi.backend.persistence.model.Nomina;
 import mx.uaemex.fi.backend.presentation.dto.EmpleadoResponse;
+import mx.uaemex.fi.backend.presentation.dto.EmpleadoUpdateRequest;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 public class TestDataBuilder {
 
     // Constantes para datos de prueba
+    public static final Integer TEST_ID = 1;
     public static final String TEST_RFC = "AAAA012345XXX";
     public static final String TEST_RFC_2 = "BBBB987654YYY";
     public static final String TEST_NOMBRE = "JUAN";
@@ -25,6 +27,7 @@ public class TestDataBuilder {
     public static final String TEST_CORREO_2 = "maria.lopez@test.com";
     public static final String TEST_PASSWORD = "Qwertyuiop1*";
     public static final String TEST_HASHED_PASSWORD = "$2a$10$dummyHashedPasswordForTesting";
+    public static final String TEST_ADMIN_ROLE = "ADMIN";
 
     // Constantes para datos de nómina
     public static final Double TEST_SALARIO_MINIMO = 500.00;
@@ -38,7 +41,7 @@ public class TestDataBuilder {
      */
     public static Empleado crearEmpleado() {
         var empleado = new Empleado();
-        empleado.setId(1);
+        empleado.setId(TEST_ID);
         empleado.setRfc(TEST_RFC);
         empleado.setNombres(TEST_NOMBRE);
         empleado.setApellidos(TEST_APELLIDOS);
@@ -128,6 +131,19 @@ public class TestDataBuilder {
         empleados.add(new EmpleadoResponse(1, TEST_RFC, TEST_NOMBRE, TEST_APELLIDOS, TEST_CORREO));
         empleados.add(new EmpleadoResponse(2, TEST_RFC_2, "MARIA", "LOPEZ GARCIA", TEST_CORREO_2));
         return empleados;
+    }
+
+    public static EmpleadoUpdateRequest crearEmpleadoUpdateRequest() {
+        return new EmpleadoUpdateRequest(TEST_RFC, TEST_NOMBRE, TEST_APELLIDOS, TEST_CORREO);
+    }
+
+    public static EmpleadoUpdateRequest crearEmpleadoUpdateRequest(
+            String rfc,
+            String nombre,
+            String apellidos,
+            String correo
+    ) {
+        return new EmpleadoUpdateRequest(rfc, nombre, apellidos, correo);
     }
 
     public static String asJsonString(final Object obj) {
