@@ -4,6 +4,7 @@ import mx.uaemex.fi.backend.logic.exception.NotFoundException;
 import mx.uaemex.fi.backend.persistence.model.Empleado;
 import mx.uaemex.fi.backend.persistence.repository.EmpleadoRepository;
 import mx.uaemex.fi.backend.presentation.dto.EmpleadoResponse;
+import mx.uaemex.fi.backend.presentation.dto.EmpleadoUpdateRequest;
 import mx.uaemex.fi.backend.util.TestDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static mx.uaemex.fi.backend.util.TestDataBuilder.TEST_RFC;
+import static mx.uaemex.fi.backend.util.TestDataBuilder.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -111,6 +112,75 @@ class EmpleadoServiceImpTest {
         assertTrue(resultado.isEmpty(), "La lista debe estar vacía");
 
         verify(empleadoRepository).findAll();
+    }
+
+    // ==================== PRUEBAS DE ACTUALIZAR ====================
+
+    @Test
+    @DisplayName("actualizar - Empleado no existe lanza NotFoundException")
+    void actualizar_empleadoNoExiste_lanzaNotFoundException() {
+        EmpleadoUpdateRequest req = TestDataBuilder.crearEmpleadoUpdateRequest();
+
+        when(empleadoRepository.findById(TEST_ID)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> empleadoService.actualizar(TEST_ID, req)
+        );
+
+        assertEquals("Empleado no encontrado", exception.getMessage());
+        verify(empleadoRepository).findById(TEST_ID);
+        verify(empleadoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("actualizar - Todos los campos se actualizan")
+    void actualizar_losCamposSeActualizan() {
+        Empleado empleado = TestDataBuilder.crearEmpleado(TEST_ID);
+
+        String nuevoRFC = "XXXX123456XXXX";
+        String nuevoNombre = "NUEVO NOMBRE";
+        String nuevoApellido = "NUEVO APELLIDO";
+        String nuevoCorreo = "nuevo.correo@email.test";
+
+        EmpleadoUpdateRequest req = TestDataBuilder.crearEmpleadoUpdateRequest(
+                nuevoRFC,
+                nuevoNombre,
+                nuevoApellido,
+                nuevoCorreo
+        );
+
+        when(empleadoRepository.findById(TEST_ID)).thenReturn(Optional.of(empleado));
+
+        empleadoService.actualizar(TEST_ID, req);
+
+        assertEquals(nuevoRFC, empleado.getRfc());
+        assertEquals(nuevoNombre, empleado.getNombres());
+        assertEquals(nuevoApellido, empleado.getApellidos());
+        assertEquals(nuevoCorreo, empleado.getCorreo());
+
+        verify(empleadoRepository).findById(TEST_ID);
+        verify(empleadoRepository).save(empleado);
+    }
+
+    @Test
+    @DisplayName("actualizar - Campos vacios no se actualizan")
+    void actualizar_camposVaciosNoSeActualizan() {
+        Empleado empleado = TestDataBuilder.crearEmpleado();
+
+        EmpleadoUpdateRequest req = new EmpleadoUpdateRequest(null, null, null, null);
+
+        when(empleadoRepository.findById(TEST_ID)).thenReturn(Optional.of(empleado));
+
+        empleadoService.actualizar(TEST_ID, req);
+
+        assertEquals(TEST_RFC, empleado.getRfc());
+        assertNotNull(TEST_NOMBRE, empleado.getNombres());
+        assertNotNull(TEST_APELLIDOS, empleado.getApellidos());
+        assertNotNull(TEST_CORREO, empleado.getCorreo());
+
+        verify(empleadoRepository).findById(TEST_ID);
+        verify(empleadoRepository).save(empleado);
     }
 }
 
